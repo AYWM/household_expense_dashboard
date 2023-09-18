@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Household Expenses Dashboard</title>
+    <!-- Include Bootstrap and jQuery -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Include Bootstrap Selectpicker from a CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.18/css/bootstrap-select.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.18/js/bootstrap-select.min.js"></script>
+    <!-- Add custom CSS for the iframe container -->
+    <style>
+        .iframe-container {
+            position: relative;
+            overflow: hidden;
+            padding-top: 56.25%; /* 16:9 aspect ratio (adjust as needed) */
+            border: 5px solid #ff6600; /* Add your preferred border style and color */
+            border-radius: 20px; /* Add border radius for a fun look */
+            width: calc(100vw - 39%); /* Take up the entire viewport width */
+            height: calc(100vh - 40px); /* Take up the remaining viewport height below select */
+        }
+        .iframe-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform-origin: top left;
+            transition: transform 0.3s ease-in-out;
+        }
+        .zoom-buttons {
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Household Expenses Dashboard</h1>
+        <div class="row justify-content-center mt-5">
+            <div class="col-md-6">
+                <!-- Fancy animated dropdown selector with Bootstrap Selectpicker -->
+                <select id="expenseSelector" class="selectpicker form-control" data-live-search="true" title="Search for an expense...">
+                </select>
+            </div>
+        </div>
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-12">
+                <!-- Embedded Google Sheets chart -->
+                 <div class="iframe-container">
+                    <iframe frameborder="1" width="10737" height="945" seamless scrolling="yes" src="" id="expenseChart"></iframe>
+                </div>
+                  <!-- Zoom and Reset buttons -->
+                <div class="zoom-buttons">
+                    <button class="btn btn-primary" id="zoomIn">Zoom In</button>
+                    <button class="btn btn-secondary" id="zoomOut">Zoom Out</button>
+                    <button class="btn btn-warning" id="resetZoom">Reset Zoom</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript to handle the dropdown and update the chart -->
+    <script>
+        // Sample data for expenses
+        const expenses = [
+            { name: "AIS-AMON", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTskC5gfnusyt3iVsNiulR1wHb4JziSxEzsFSRMD4cBFxpiqF73gDvJ83S5P-htszrSNjLBMXhe91dJ/pubchart?oid=551964990&format=interactive" },
+            { name: "MEA-Britannia", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTskC5gfnusyt3iVsNiulR1wHb4JziSxEzsFSRMD4cBFxpiqF73gDvJ83S5P-htszrSNjLBMXhe91dJ/pubchart?oid=1096195209&format=interactive" },
+            { name: "MEA-Flat10", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTskC5gfnusyt3iVsNiulR1wHb4JziSxEzsFSRMD4cBFxpiqF73gDvJ83S5P-htszrSNjLBMXhe91dJ/pubchart?oid=1718096885&amp;format=interactive" },
+            { name: "MWA-Britannia", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTskC5gfnusyt3iVsNiulR1wHb4JziSxEzsFSRMD4cBFxpiqF73gDvJ83S5P-htszrSNjLBMXhe91dJ/pubchart?oid=469947791&format=interactive" },
+            { name: "Loan-Home-Britannia", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTskC5gfnusyt3iVsNiulR1wHb4JziSxEzsFSRMD4cBFxpiqF73gDvJ83S5P-htszrSNjLBMXhe91dJ/pubchart?oid=584788314&format=interactive" },
+        ];
+
+        // Initialize the Bootstrap Selectpicker dropdown
+        const expenseSelector = document.getElementById("expenseSelector");
+        expenses.forEach(expense => {
+            const option = document.createElement("option");
+            option.text = expense.name;
+            option.value = expense.url;
+            expenseSelector.appendChild(option);
+        });
+        $('.selectpicker').selectpicker();
+
+        // Update the chart when a new expense is selected
+        expenseSelector.addEventListener("change", () => {
+            const selectedUrl = expenseSelector.value;
+            const expenseChart = document.getElementById("expenseChart");
+            expenseChart.src = selectedUrl;
+        });
+
+         // Zoom buttons functionality
+        const iframeContainer = document.querySelector(".iframe-container");
+        const zoomInButton = document.getElementById("zoomIn");
+        const zoomOutButton = document.getElementById("zoomOut");
+        const resetZoomButton = document.getElementById("resetZoom");
+        let zoomLevel = 1;
+
+        zoomInButton.addEventListener("click", () => {
+            zoomLevel += 0.1;
+            // Set transform property with transition
+            iframeContainer.style.transition = "transform 0.3s ease-in-out";
+            iframeContainer.style.transform = `scale(${zoomLevel})`;
+        });
+
+        zoomOutButton.addEventListener("click", () => {
+            zoomLevel -= 0.1;
+            // Set transform property with transition
+            iframeContainer.style.transition = "transform 0.3s ease-in-out";
+            iframeContainer.style.transform = `scale(${zoomLevel})`;
+        });
+
+        resetZoomButton.addEventListener("click", () => {
+            zoomLevel = 1;
+            // Set transform property with transition
+            iframeContainer.style.transition = "transform 0.3s ease-in-out";
+            iframeContainer.style.transform = `scale(${zoomLevel})`;
+
+            // expenseChart.style.transition = "transform 0.3s ease-in-out";
+            // expenseChart.style.transform = `scale(${zoomLevel})`;
+        });
+
+        // Set the iframe height to occupy the remaining viewport space
+        function setIframeHeight() {
+            const iframeContainer = document.querySelector(".iframe-container");
+            const windowHeight = window.innerHeight;
+            const selectHeight = document.querySelector(".bootstrap-select").offsetHeight;
+            iframeContainer.style.height = (windowHeight - selectHeight) + "px";
+        }
+
+        // Call setIframeHeight initially and on window resize
+        setIframeHeight();
+        window.addEventListener("resize", setIframeHeight);
+
+    </script>
+</body>
+</html>
