@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-     <meta charset="UTF-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Household Expenses Dashboard</title>
     <!-- Include Bootstrap and jQuery -->
@@ -14,43 +15,57 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.18/js/bootstrap-select.min.js"></script>
     <!-- Add custom CSS for the iframe container -->
     <style>
-     .iframe-container {
-          position: relative;
-          overflow: hidden;
-          padding-top: 56.25%; /* 16:9 aspect ratio (adjust as needed) */
-          border: 5px solid #ff6600; /* Add your preferred border style and color */
-          border-radius: 20px; /* Add border radius for a fun look */
-          width: 100%; /* Take up the entire viewport width */
-          height: calc(100vh - 40px); /* Take up the remaining viewport height below select */
-     }
-     .iframe-container iframe {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          transform-origin: top left;
-          transition: transform 0.3s ease-in-out;
-     }
-     .zoom-buttons {
-          text-align: center;
-          margin-top: 10px;
-     }
-     .gradient-button {
-          background: linear-gradient(45deg, #FF5733, #33FF57); /* Initial gradient colors */
-          border: none;
-          color: white;
-          padding: 10px 20px;
-          border-radius: 5px;
-          cursor: pointer;
-          transition: background 0.5s ease; /* Smooth color transition */
-     }
-     .gradient-button:hover {
-          background: linear-gradient(45deg, #33FF57, #5733FF); /* Hover gradient colors */
-     }
-    </style>
+        .iframe-container {
+            position: relative;
+            overflow: hidden;
+            padding-top: 56.25%;
+            border: 5px solid #ff6600;
+            border-radius: 20px;
+            width: 100%;
+            height: calc(100vh - 10px);
+        }
 
+        .iframe-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .zoom-buttons,
+        .fit-buttons {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .gradient-button {
+            background: linear-gradient(45deg, #FF5733, #33FF57);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.5s ease;
+        }
+
+        .gradient-button:hover {
+            background: linear-gradient(45deg, #33FF57, #5733FF);
+        }
+
+        .floating-buttons {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+    </style>
 </head>
+
 <body>
     <div class="container mt-5">
         <h1 class="text-center">Household Expenses Dashboard</h1>
@@ -60,26 +75,26 @@
                 <select id="expenseSelector" class="selectpicker form-control" data-live-search="true" title="Search for an expense...">
                 </select>
             </div>
-          <!-- Zoom and Reset buttons -->
-           <div class="zoom-buttons">
-               <button class="btn btn-primary" id="zoomIn">Zoom In</button>
-               <button class="btn btn-secondary" id="zoomOut">Zoom Out</button>
-               <button class="btn btn-warning" id="resetZoom">Reset Zoom</button>
-           </div>
-          <div class="col-md-12">
-               <!-- Gradient button to open the selected URL -->
-               <button id="openUrlButton" class="gradient-button">Open Graph in New Tab</button>
-          </div>
-                  
         </div>
+      
         <div class="row justify-content-center mt-4">
-            <div class="col-md-12">
+            <!-- <div class="col-md-12"> -->
                 <!-- Embedded Google Sheets chart -->
-                 <div class="iframe-container">
-                    <iframe frameborder="1" width="10737" height="945" seamless scrolling="yes" src="" id="expenseChart"></iframe>
+                <div class="iframe-container" id="iframeContainer">
+                    <iframe frameborder="1" seamless scrolling="yes" src="" id="expenseChart"></iframe>
                 </div>
-                
-            </div>
+            <!-- </div> -->
+        </div>
+    </div>
+
+    <!-- Floating buttons for fit-to-width and fit-to-height -->
+    <div class="floating-buttons">
+        <button id="openUrlButton" class="gradient-button">Open Graph in New Tab</button>
+        <!-- Zoom and Reset buttons -->
+        <div class="zoom-buttons">
+            <button class="btn btn-primary" id="zoomIn">Zoom In</button>
+            <button class="btn btn-secondary" id="zoomOut">Zoom Out</button>
+            <button class="btn btn-warning" id="resetZoom">Reset Zoom</button>
         </div>
     </div>
 
@@ -96,18 +111,16 @@
 
         // Initialize the Bootstrap Selectpicker dropdown
         const expenseSelector = document.getElementById("expenseSelector");
-         // Get the button element
         const openUrlButton = document.getElementById("openUrlButton");
 
-         // Handle button click to open the selected URL
+        // Handle button click to open the selected URL
         openUrlButton.addEventListener("click", () => {
             const selectedUrl = expenseSelector.value;
             if (selectedUrl) {
-                // Open the selected URL in a new tab/window
                 window.open(selectedUrl, '_blank');
             }
         });
-         
+
         expenses.forEach(expense => {
             const option = document.createElement("option");
             option.text = expense.name;
@@ -123,35 +136,31 @@
             expenseChart.src = selectedUrl;
         });
 
-         // Zoom buttons functionality
+        // Zoom buttons functionality
         const iframeContainer = document.querySelector(".iframe-container");
         const zoomInButton = document.getElementById("zoomIn");
         const zoomOutButton = document.getElementById("zoomOut");
         const resetZoomButton = document.getElementById("resetZoom");
+        const expenseChart = document.getElementById("expenseChart");
+ 
         let zoomLevel = 1;
 
         zoomInButton.addEventListener("click", () => {
             zoomLevel += 0.1;
-            // Set transform property with transition
             iframeContainer.style.transition = "transform 0.3s ease-in-out";
             iframeContainer.style.transform = `scale(${zoomLevel})`;
         });
 
         zoomOutButton.addEventListener("click", () => {
             zoomLevel -= 0.1;
-            // Set transform property with transition
             iframeContainer.style.transition = "transform 0.3s ease-in-out";
             iframeContainer.style.transform = `scale(${zoomLevel})`;
         });
 
         resetZoomButton.addEventListener("click", () => {
             zoomLevel = 1;
-            // Set transform property with transition
             iframeContainer.style.transition = "transform 0.3s ease-in-out";
             iframeContainer.style.transform = `scale(${zoomLevel})`;
-
-            // expenseChart.style.transition = "transform 0.3s ease-in-out";
-            // expenseChart.style.transform = `scale(${zoomLevel})`;
         });
 
         // Set the iframe height to occupy the remaining viewport space
@@ -159,13 +168,27 @@
             const iframeContainer = document.querySelector(".iframe-container");
             const windowHeight = window.innerHeight;
             const selectHeight = document.querySelector(".bootstrap-select").offsetHeight;
-            iframeContainer.style.height = (windowHeight - selectHeight) + "px";
+            iframeContainer.style.height = (windowHeight - selectHeight - 120) + "px";
         }
 
         // Call setIframeHeight initially and on window resize
         setIframeHeight();
         window.addEventListener("resize", setIframeHeight);
 
+        // Responsive floating buttons
+        function updateFloatingButtons() {
+            const isMobile = window.innerWidth <= 768;
+            document.getElementById('zoomIn').innerHTML = isMobile ? '+' : 'Zoom In';
+            document.getElementById('zoomOut').innerHTML = isMobile ? '-' : 'Zoom Out';
+            document.getElementById('resetZoom').innerHTML = isMobile ? 'R' : 'Reset Zoom';
+            document.getElementById('openUrlButton').innerHTML = isMobile ? 'O' : 'Open Graph in New Tab';
+        }
+
+        // Call updateFloatingButtons initially and on window resize
+        updateFloatingButtons();
+        window.addEventListener("resize", updateFloatingButtons);
+
     </script>
 </body>
+
 </html>
